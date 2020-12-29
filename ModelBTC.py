@@ -4,11 +4,34 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
-df = pd.read_csv('/Users/daniele/Desktop/Stock BTC Prediction/BTC-USD.csv')
+df = pd.read_csv('/Users/daniele/Desktop/Stock BTC Prediction/BTC-USD-all.csv', index_col=0)
+#df['Date'] = pd.to_datetime(df['Date'])
 df.head()
 
+df.describe()
 
-fig = px.line(df, x="Date", y="Close", title='BTC-USD Stock')
+
+df.isna().sum()
+
+df.dtypes
+
+fig = px.line(df, x=df.index, y=["Open","Close",'High','Low'], title='BTC-USD Stock')
+fig.update_layout(
+    autosize=False,
+    width=1000,
+    height=500,
+    margin=dict(
+        l=50,
+        r=50,
+        b=100,
+        t=100,
+        pad=4
+        )
+    )
+
+fig.show()
+
+fig = px.line(df, x=df.index, y='Volume', title='BTC-USD Volume')
 fig.update_layout(
     autosize=False,
     width=1000,
