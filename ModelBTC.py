@@ -19,7 +19,7 @@ df.dtypes
 fig = px.line(df, x=df.index, y=["Open","Close",'High','Low'], title='BTC-USD Stock')
 fig.update_layout(
     autosize=False,
-    width=1000,
+    #width=2000,
     height=500,
     margin=dict(
         l=50,
@@ -57,3 +57,20 @@ df_scaled.drop(['Adj Close', 'Volume'], axis=1, inplace=True)
 df_scaled.columns
 
 df_scaled.describe()
+
+#Plot Close normalized
+fig = px.line(df_scaled, x=df_scaled.index, y='Close', title='BTC-USD Close Normalized')
+fig.update_layout(
+    autosize=False,
+    width=1000,
+    height=500,
+    margin=dict(
+        l=50,
+        r=50,
+        b=100,
+        t=100,
+        pad=4
+        )
+    )
+
+fig.show()
