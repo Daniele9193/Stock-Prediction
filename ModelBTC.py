@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+from sklearn.preprocessing import MinMaxScaler
 
 df = pd.read_csv('/Users/daniele/Desktop/Stock BTC Prediction/BTC-USD-all.csv', index_col=0)
 #df['Date'] = pd.to_datetime(df['Date'])
@@ -46,3 +47,13 @@ fig.update_layout(
     )
 
 fig.show()
+
+scaler = MinMaxScaler()
+df_scaled = pd.DataFrame(scaler.fit_transform(df), index=df.index)
+df_scaled.columns = df.columns
+df_scaled.head()
+
+df_scaled.drop(['Adj Close', 'Volume'], axis=1, inplace=True)
+df_scaled.columns
+
+df_scaled.describe()
