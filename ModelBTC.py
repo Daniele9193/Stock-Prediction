@@ -180,3 +180,7 @@ WindowGenerator.test = test
 
 
 w1.train.element_spec
+
+for example_inputs, example_labels in w1.train.take(1):
+  print(f'Inputs shape (batch, time, features): {example_inputs.shape}')
+  print(f'Labels shape (batch, time, features): {example_labels.shape}')
