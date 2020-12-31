@@ -184,3 +184,74 @@ w1.train.element_spec
 for example_inputs, example_labels in w1.train.take(1):
   print(f'Inputs shape (batch, time, features): {example_inputs.shape}')
   print(f'Labels shape (batch, time, features): {example_labels.shape}')
+
+
+# Single step model
+single_step_window = WindowGenerator(input_width=1, label_width=1, shift=1, label_columns=['Close'])
+single_step_window
+
+
+
+for example_inputs, example_labels in single_step_window.train.take(1):
+    print(f'Input shape: {example_inputs.shape}')
+    print(f'Labels shape: {example_labels.shape}')
+
+
+# Linear model
+linear = tf.keras.Sequential([
+    tf.keras.layers.Dense(units=1)
+])
+
+MAX_EPOCHS = 20
+
+def compile_and_fit(model, window, patience=2):
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience, mode='min')
+
+    model.compile(loss=tf.losses.MeanSquaredError(), optimizer=tf.optimizers.Adam(), metrics=[tf.metrics.MeanAbsoluteError()])
+
+    history = model.fit(window.train, epochs=MAX_EPOCHS, validation_data=window.val, callbacks=[early_stopping])
+
+    return history
+
+
+history = compile_and_fit(linear, single_step_window)
+
+val_performance = {}
+performance = {}
+
+val_performance['Linear'] = linear.evaluate(single_step_window.val)
+performance['Linear'] = linear.evaluate(single_step_window.test)
+
+val_performance
+len(val_performance['Linear'])
+
+performance
+
+x = list(range(1,len(val_performance['Linear'])+1))
+len(x)
+print(x)
+
+# Plot metrics linear model
+plt.figure()
+plt.plot(x, val_performance['Linear'])
+plt.plot(x, performance['Linear'])
+plt.show()
+
+
+predictions = linear.predict(single_step_window.test)
+
+len(predictions)
+
+prediction_flat = []
+for list in predictions:
+    print(list)
+    prediction_flat.append(list[0][0])
+
+print(prediction_flat)
+len(prediction_flat)
+
+x = range(1,len(prediction_flat)+1)
+x = [*x]
+plt.figure()
+plt.plot(x, prediction_flat)
+plt.show()
