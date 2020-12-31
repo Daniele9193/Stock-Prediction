@@ -6,6 +6,8 @@ import plotly.express as px
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
+tf.version.VERSION
+
 df = pd.read_csv('/Users/daniele/Desktop/Stock BTC Prediction/BTC-USD-all.csv', index_col=0)
 df.head()
 
@@ -53,6 +55,8 @@ fig.show()
 df.drop(['Volume'],1,inplace=True)
 df.drop(['Adj Close'],1,inplace=True)
 
+
+column_indices = {name: i for i, name in enumerate(df.columns)}
 
 # Train val test split
 n = len(df)
@@ -102,13 +106,9 @@ class WindowGenerator():
         self.label_slice = slice(self.label_start, None)
         self.label_indices = np.arange(self.total_window_size)[self.label_slice]
 
-        print('Total window size:', self.total_window_size)
-        print('Input indices: ', self.input_indices)
-        print('Label indices: ', self.label_indices)
-        print('Label column name(s):', self.label_columns)
 
-        def __repr__(self):
-            return '\n'.join([
+    def __repr__(self):
+        return '\n'.join([
             f'Total window size: {self.total_window_size}',
             f'Input indices: {self.input_indices}',
             f'Label indices: {self.label_indices}',
@@ -116,7 +116,7 @@ class WindowGenerator():
 
 
 w1 = WindowGenerator(input_width=6, label_width=1, shift=1, label_columns=['Close'])
-
+w1
 
 # Function split_window
 def split_window(self, features):
@@ -138,8 +138,8 @@ WindowGenerator.split_window = split_window
 
 # Stack three slices, the length of the total window:
 example_window = tf.stack([np.array(train_df[:w1.total_window_size]),
-                           np.array(train_df[7:7+w1.total_window_size]),
-                           np.array(train_df[14:14+w1.total_window_size])])
+                           np.array(train_df[100:100+w1.total_window_size]),
+                           np.array(train_df[200:200+w1.total_window_size])])
 
 
 example_inputs, example_labels = w1.split_window(example_window)
@@ -149,11 +149,12 @@ print(f'Window shape: {example_window.shape}')
 print(f'Inputs shape: {example_inputs.shape}')
 print(f'labels shape: {example_labels.shape}')
 
+train_df.iloc[:,0:3]
 
 # Function make_dataset
 def make_dataset(self, data):
     data = np.array(data, dtype=np.float64)
-    ds = tf.keras.preprocessing.sequence.TimeseriesGenerator(data=data, targets=None, length=self.total_window_size, stride=1, shuffle=True, batch_size=32)
+    ds = tf.keras.preprocessing.timeseries_dataset_from_array(data=data, targets=None, sequence_length=self.total_window_size, sequence_stride=1, shuffle=True, batch_size=32)
     ds = ds.map(self.split_window)
     return ds
 
