@@ -167,7 +167,7 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 model_lstm = tf.keras.models.Sequential([
     tf.keras.layers.Input(shape=(n_past, n_features)),
     # Shape [batch, time, features] => [batch, time, lstm_units]
-    tf.keras.layers.LSTM(64, return_sequences=False),
+    tf.keras.layers.LSTM(64, return_sequences=True),
     # Shape => [batch, time, features]
     tf.keras.layers.Dense(units=4),
     #tf.keras.layers.Reshape([1, -1])
@@ -196,34 +196,16 @@ len(y_test)
 
 X_prova = X_test
 
-X_plot = np.concatenate([X_prova[0],[pred_lstm[0]]])
-print(X_plot)
+for _ in range(0,5):
+    y_prova = []
+    for i in X_prova[_]:
+        y_prova.append(i[0])
 
-plot = []
-for i in X_plot:
-    plot.append(i[0])
+    pred = []
+    for i in pred_lstm[_]:
+        pred.append(i[0])
 
-plt.figure()
-plt.scatter(x=list(range(0,len(plot))), y=plot)
-plt.show()
-
-
-
-X_true = X_test
-X_true = np.concatenate([X_true[0],y_test[0]])
-print(X_true)
-
-plot = []
-for i in X_true:
-    plot.append(i[0])
-
-plt.figure()
-plt.scatter(x=list(range(0,len(plot))), y=plot)
-plt.show()
-
-
-for index,i in enumerate(train_df.columns):
-    scaler = scalers['scaler_'+i]
-    pred_lstm[:,:,index]=scaler.inverse_transform(pred_lstm[:,:,index])
-    y_train[:,:,index]=scaler.inverse_transform(y_train[:,:,index])
-    y_test[:,:,index]=scaler.inverse_transform(y_test[:,:,index])
+    plt.figure()
+    plt.scatter(list(range(0,len(y_prova))),y_prova)
+    plt.scatter(list(range(1,len(pred)+1)),pred)
+    plt.show()
