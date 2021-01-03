@@ -160,20 +160,29 @@ print(pred_e2d2.shape)
 
 
 X_prova = X_test
+y_prova = []
+pred = []
+test = []
 
-for _ in range(0,5):
-    y_prova = []
+for _ in range(0,len(X_prova)):
     for i in X_prova[_]:
         y_prova.append(i[0])
 
-    pred = []
     for i in pred_e2d2[_]:
         pred.append(i[0])
 
-    plt.figure()
-    plt.scatter(list(range(0,len(y_prova))),y_prova)
-    plt.scatter(list(range(6,len(pred)+6)),pred)
-    plt.show()
+    for i in y_test[_]:
+        test.append(i[0])
+
+print(len(y_prova))
+print(len(pred))
+print(len(test))
+
+plt.figure()
+plt.scatter(list(range(0,len(y_prova))),y_prova)
+plt.scatter(list(range(n_past,(len(pred)*n_past)+n_past, n_past)),pred)
+plt.scatter(list(range(n_past,(len(test)*n_past)+n_past, n_past)),test)
+plt.show()
 
 
 
@@ -187,11 +196,11 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 model_lstm = tf.keras.models.Sequential([
     tf.keras.layers.Input(shape=(n_past, n_features)),
     # Shape [batch, time, features] => [batch, time, lstm_units]
-    tf.keras.layers.LSTM(64, return_sequences=True),
+    tf.keras.layers.LSTM(64, return_sequences=False),
     # Shape => [batch, time, features]
     tf.keras.layers.Dense(units=n_features),
-    tf.keras.layers.RepeatVector(n_future)
-    #tf.keras.layers.Reshape([1, -1])
+    #tf.keras.layers.RepeatVector(n_future)
+    tf.keras.layers.Reshape((1, 4))
 ])
 
 model_lstm.summary()
@@ -209,19 +218,97 @@ plt.show()
 
 pred_lstm=model_lstm.predict(X_test)
 
-
+# Plot test prediction 
 X_prova = X_test
+y_prova = []
+pred = []
+test = []
 
-for _ in range(0,5):
-    y_prova = []
+for _ in range(0,len(X_prova)):
     for i in X_prova[_]:
-        y_prova.append(i[0])
+        y_prova.append(i[3])
 
-    pred = []
     for i in pred_lstm[_]:
-        pred.append(i[0])
+        pred.append(i[3])
 
-    plt.figure()
-    plt.scatter(list(range(0,len(y_prova))),y_prova)
-    plt.scatter(list(range(1,len(pred)+1)),pred)
-    plt.show()
+    for i in y_test[_]:
+        test.append(i[3])
+
+print(len(y_prova))
+print(len(pred))
+print(len(test))
+
+plt.figure()
+#plt.scatter(list(range(0,len(y_prova))),y_prova)
+plt.plot(list(range(n_past,(len(pred)*n_past)+n_past, n_past)),pred)
+plt.plot(list(range(n_past,(len(test)*n_past)+n_past, n_past)),test)
+plt.legend(['y_pred', 'y_test'], loc='upper left')
+plt.show()
+
+
+
+
+
+
+# Multi LSTM Model
+OUT_STEPS = 1
+multi_lstm_model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(n_past, n_features)),
+    # Shape [batch, time, features] => [batch, lstm_units]
+    # Adding more `lstm_units` just overfits more quickly.
+    tf.keras.layers.LSTM(32, return_sequences=False),
+    # Shape => [batch, out_steps*features]
+    tf.keras.layers.Dense(OUT_STEPS*n_features,
+                          kernel_initializer=tf.initializers.zeros),
+    # Shape => [batch, out_steps, features]
+    tf.keras.layers.Reshape((OUT_STEPS, n_features))
+])
+
+multi_lstm_model.summary()
+
+reduce_lr = tf.keras.callbacks.LearningRateScheduler(lambda x: 1e-3 * 0.90 ** x)
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor='val_loss', min_delta=0, patience=0, verbose=1,
+    mode='auto', baseline=None, restore_best_weights=False
+)
+
+multi_lstm_model.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.MeanSquaredError())
+history_multi_lstm=multi_lstm_model.fit(X_train,y_train,epochs=100,validation_data=(X_val,y_val),batch_size=32,verbose=1,callbacks=[reduce_lr, early_stopping])
+
+plt.plot(history_multi_lstm.history['loss'])
+plt.plot(history_multi_lstm.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+
+pred_multi_lstm=multi_lstm_model.predict(X_test)
+
+# Plot test prediction
+X_prova = X_test
+y_prova = []
+pred = []
+test = []
+
+for _ in range(0,len(X_prova)):
+    for i in X_prova[_]:
+        y_prova.append(i[3])
+
+    for i in pred_multi_lstm[_]:
+        pred.append(i[3])
+
+    for i in y_test[_]:
+        test.append(i[3])
+
+print(len(y_prova))
+print(len(pred))
+print(len(test))
+
+plt.figure()
+#plt.scatter(list(range(0,len(y_prova))),y_prova)
+plt.plot(list(range(n_past,(len(pred)*n_past)+n_past, n_past)),pred)
+plt.plot(list(range(n_past,(len(test)*n_past)+n_past, n_past)),test)
+plt.legend(['y_pred', 'y_test'], loc='upper left')
+plt.show()
