@@ -158,6 +158,26 @@ pred_e2d2=model_e2d2.predict(X_test)
 
 print(pred_e2d2.shape)
 
+
+X_prova = X_test
+
+for _ in range(0,5):
+    y_prova = []
+    for i in X_prova[_]:
+        y_prova.append(i[0])
+
+    pred = []
+    for i in pred_e2d2[_]:
+        pred.append(i[0])
+
+    plt.figure()
+    plt.scatter(list(range(0,len(y_prova))),y_prova)
+    plt.scatter(list(range(6,len(pred)+6)),pred)
+    plt.show()
+
+
+
+
 reduce_lr = tf.keras.callbacks.LearningRateScheduler(lambda x: 1e-3 * 0.90 ** x)
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor='val_loss', min_delta=0, patience=0, verbose=1,
@@ -169,11 +189,14 @@ model_lstm = tf.keras.models.Sequential([
     # Shape [batch, time, features] => [batch, time, lstm_units]
     tf.keras.layers.LSTM(64, return_sequences=True),
     # Shape => [batch, time, features]
-    tf.keras.layers.Dense(units=4),
+    tf.keras.layers.Dense(units=n_features),
+    tf.keras.layers.RepeatVector(n_future)
     #tf.keras.layers.Reshape([1, -1])
 ])
 
-model_lstm.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.MeanSquaredError())
+model_lstm.summary()
+
+model_lstm.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.MeanAbsoluteError())
 history_lstm=model_lstm.fit(X_train,y_train,epochs=100,validation_data=(X_val,y_val),batch_size=32,verbose=1,callbacks=[reduce_lr, early_stopping])
 
 plt.plot(history_lstm.history['loss'])
@@ -185,14 +208,7 @@ plt.legend(['train', 'val'], loc='upper left')
 plt.show()
 
 pred_lstm=model_lstm.predict(X_test)
-print(X_test.shape)
-print(y_test.shape)
 
-print(pred_lstm)
-print(pred_lstm.shape)
-
-len(pred_lstm)
-len(y_test)
 
 X_prova = X_test
 
